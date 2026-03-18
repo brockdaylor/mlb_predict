@@ -1,0 +1,101 @@
+############################
+# R / RStudio
+############################
+
+# RStudio user-specific state
+.Rproj.user/
+
+# R session files
+.Rhistory
+.RData
+.Ruserdata
+
+# R CMD check
+.Rcheck/
+
+# R environment files (user-specific)
+.Renviron
+.Rprofile.local
+
+############################
+# renv (reproducibility)
+############################
+
+# Project-local library (never commit)
+renv/library/
+
+# renv cache (defensive)
+renv/cache/
+
+############################
+# Data
+############################
+
+# Raw data (DO NOT TRACK)
+data/raw/
+
+# Optional: very large or temporary data
+data/temp/
+data/intermediate/
+
+############################
+# Outputs (optional choice)
+############################
+
+# Uncomment if needed:
+# Ignore outputs 
+# output/
+
+############################
+# LaTeX / PDF
+############################
+
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.run.xml
+*.synctex.gz
+*.toc
+
+############################
+# OS noise
+############################
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+############################
+# Editors / IDEs
+############################
+
+# VS Code
+.vscode/
+
+# JetBrains
+.idea/
+
+############################
+# Archives / misc
+############################
+
+*.zip
+*.tar.gz
+*.7z
+*.rar
+
+############################
+# Temporary / scratch
+############################
+
+tmp/
+temp/
+scratch/
