@@ -4,7 +4,7 @@
 #          Incremental: skips completed seasons, re-pulls current season
 ############################################################
 
-source("00_setup.R")
+source(here::here("code", "00_setup.R"))
 
 # ---- Config ----
 SEASONS <- c(2025, 2026)

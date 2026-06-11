@@ -4,7 +4,7 @@
 #          Incremental: skips completed seasons, re-pulls current season
 ############################################################
 
-source("00_setup.R")
+source(here::here("code", "00_setup.R"))
 
 # ---- Config ----
 SEASONS <- c(2025, 2026)
@@ -28,11 +28,11 @@ for (season in SEASONS) {
     message("Pulling FanGraphs batters: ", season)
     df_batters <- tryCatch(
       baseballr::fg_batter_leaders(
-        x      = season,
-        y      = season,
-        league = "all",
-        qual   = 0,
-        ind    = 1
+        startseason = season,
+        endseason   = season,
+        lg          = "all",
+        qual        = 0,
+        ind         = 1
       ),
       error = function(e) {
         message("  ERROR: ", conditionMessage(e))
@@ -54,11 +54,11 @@ for (season in SEASONS) {
     message("Pulling FanGraphs pitchers: ", season)
     df_pitchers <- tryCatch(
       baseballr::fg_pitcher_leaders(
-        x      = season,
-        y      = season,
-        league = "all",
-        qual   = 0,
-        ind    = 1
+        startseason = season,
+        endseason   = season,
+        lg          = "all",
+        qual        = 0,
+        ind         = 1
       ),
       error = function(e) {
         message("  ERROR: ", conditionMessage(e))

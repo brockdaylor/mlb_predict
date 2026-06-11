@@ -4,7 +4,7 @@
 #          Incremental: skips completed months, re-pulls current month
 ############################################################
 
-source("00_setup.R")
+source(here::here("code", "00_setup.R"))
 
 # ---- Config ----
 SEASONS <- c(2025, 2026)
@@ -22,15 +22,43 @@ SEASON_END <- c(
 RAW_DIR <- file.path(DATA_RAW, "statcast")
 dir.create(RAW_DIR, showWarnings = FALSE, recursive = TRUE)
 
-# ---- Helper: pull one week of Statcast pitches ----
+# ---- Helper: build the Baseball Savant Statcast CSV query URL ----
+# Mirrors the query baseballr::statcast_search() constructs, but we read the
+# returned CSV with its own header row rather than baseballr's hard-coded
+# column-name vector. baseballr 1.6.0 hard-codes 92 names and errors
+# ("Can't assign 92 names to a 119-column data.table") against Savant's current
+# schema; reading the header directly is robust to columns being added or
+# reordered upstream.
+statcast_csv_url <- function(start, end, player_type = "batter") {
+  season <- format(as.Date(start), "%Y")
+  pairs <- c(
+    "all=true", "hfPT=", "hfAB=", "hfBBT=", "hfPR=", "hfZ=", "stadium=",
+    "hfBBL=", "hfNewZones=", "hfGT=R%7CPO%7CS%7C&hfC",
+    paste0("hfSea=", season, "%7C"),
+    "hfSit=", "hfOuts=", "opponent=", "pitcher_throws=", "batter_stands=",
+    "hfSA=", paste0("player_type=", player_type),
+    "hfInfield=", "team=", "position=", "hfOutfield=", "hfRO=", "home_road=",
+    paste0("game_date_gt=", start), paste0("game_date_lt=", end),
+    "hfFlag=", "hfPull=", "metric_1=", "hfInn=",
+    "min_pitches=0", "min_results=0", "group_by=name", "sort_col=pitches",
+    "player_event_sort=h_launch_speed", "sort_order=desc", "min_abs=0",
+    "type=details"
+  )
+  paste0("https://baseballsavant.mlb.com/statcast_search/csv?",
+         paste(pairs, collapse = "&"))
+}
+
+# ---- Helper: pull one week of Statcast pitches (header-driven, robust) ----
 pull_statcast_week <- function(start, end) {
   message("  Pulling: ", start, " to ", end)
   Sys.sleep(3)
-  baseballr::statcast_search(
-    start_date  = as.character(start),
-    end_date    = as.character(end),
-    player_type = "batter"
-  )
+  url <- statcast_csv_url(start, end, player_type = "batter")
+  tmp <- tempfile(fileext = ".csv")
+  on.exit(unlink(tmp), add = TRUE)
+  utils::download.file(url, tmp, mode = "wb", quiet = TRUE)
+  dt <- data.table::fread(tmp, showProgress = FALSE)
+  if (nrow(dt) == 0 || !("pitch_type" %in% names(dt))) return(NULL)
+  dt
 }
 
 # ---- Helper: pull one calendar month of Statcast pitches ----

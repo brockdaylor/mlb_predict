@@ -97,9 +97,16 @@ To add a new season, extend `SEASONS <- c(2025, 2026, ...)` in each processing s
 
 | Source | Granularity | Key Functions | Processed Output |
 |--------|------------|---------------|-----------------|
-| Statcast | Every pitch | `statcast_search()` | `statcast_all.parquet` |
+| Statcast | Every pitch | Baseball Savant CSV (header-driven reader, see note) | `statcast_all.parquet` |
 | Baseball Reference | Game-level | `bref_daily_batter()`, `bref_daily_pitcher()` | `bref_batters_all.parquet`, `bref_pitchers_all.parquet` |
-| FanGraphs | Season-level | `fg_batter_leaders()`, `fg_pitcher_leaders()`, `fg_park()` | `fg_batters_all.parquet`, `fg_pitchers_all.parquet`, `fg_park_factors_all.parquet` |
+| FanGraphs | Season-level | `fg_batter_leaders()`, `fg_pitcher_leaders()` | `fg_batters_all.parquet`, `fg_pitchers_all.parquet` |
 | Lahman | Season-level, historical | `Lahman` package tables | `lahman_batting_season.parquet`, `lahman_pitching_season.parquet`, `lahman_teams_season.parquet` |
 
 Raw data lives in `data/raw/` and is never modified. Processed parquet files in `data/processed/` are the entry point for analysis. Neither directory is tracked by git.
+
+### Known limitations (CRAN `baseballr` 1.6.0)
+
+The pinned CRAN `baseballr` (1.6.0) has two upstream bugs. The dev (GitHub) `baseballr` 2.0.0 fixes them but **cannot be installed reproducibly on R 4.5.2 / Windows** — its lazy-load step fails during `R CMD INSTALL`, which would also break `renv::restore()` — so we stay on CRAN and work around them:
+
+- **Statcast** — `statcast_search()` hard-codes 92 column names and errors against Savant's current 119-column schema (`Can't assign 92 names to a 119-column data.table`). `01_process_statcast_data.R` instead queries the Baseball Savant CSV endpoint directly and reads column names from the CSV header (`statcast_csv_url()` / `pull_statcast_week()`), which is robust to upstream schema changes.
+- **FanGraphs park factors** — `fg_park()` errors (`object 'park_table' not found`) and is currently **unavailable**. `03_process_fangraphs_data.R` attempts the pull, logs the error, and skips it; no `fg_park_factors_all.parquet` is produced. Batting/pitching leaders are unaffected.
