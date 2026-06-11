@@ -3,15 +3,53 @@
 # Purpose: Load packages, define paths, set global options
 ############################################################
 
+# ---- 0. Bootstrap renv (runs before anything else) ----
+# Directly adds the renv library to .libPaths() by constructing the path from
+# the R version and platform. Avoids sourcing activate.R mid-session, which is
+# designed for session startup and does not reliably set .libPaths() when called
+# from inside a script.
+local({
+  # Walk up to find the project root (contains renv.lock)
+  path <- getwd()
+  while (nchar(path) > 3) {
+    if (file.exists(file.path(path, "renv.lock"))) break
+    path <- dirname(path)
+  }
+  if (!file.exists(file.path(path, "renv.lock"))) return()
+
+  # Build the renv library path for this R version and platform
+  r_ver <- paste0("R-", R.Version()$major, ".",
+                  strsplit(R.Version()$minor, "\\.")[[1]][1])
+  os    <- if (.Platform$OS.type == "windows") "windows" else "unix"
+  lib   <- file.path(path, "renv", "library", os, r_ver, R.version[["platform"]])
+
+  if (!dir.exists(lib)) return()
+
+  # Always correct RENV_PROJECT — a prior failed activation may have set it
+  # to the wrong directory (e.g. code/ instead of the project root)
+  Sys.setenv(RENV_PROJECT = path)
+
+  if (!lib %in% .libPaths()) {
+    .libPaths(c(lib, .libPaths()))
+  }
+})
+
 # ---- 1. Load core packages ----
 library(here)
+here::i_am("code/00_setup.R")   # anchor project root to mlb_predict/, not code/
 library(data.table)
 library(tidyverse)
+
+# MLB data
+library(baseballr)
 
 # Modeling / econometrics
 library(fixest)
 library(modelsummary)
 library(broom)
+
+# Visualization
+library(ggrepel)
 
 # Data utilities
 library(janitor)
@@ -59,6 +97,17 @@ save_table <- function(model, filename) {
   modelsummary::modelsummary(
     model,
     output = file.path(OUTPUT_TABLES, filename)
+  )
+}
+
+# Save plot helper
+save_plot <- function(plot, filename, width = 8, height = 5, dpi = 300) {
+  ggsave(
+    filename = file.path(OUTPUT_FIGURES, filename),
+    plot     = plot,
+    width    = width,
+    height   = height,
+    dpi      = dpi
   )
 }
 
