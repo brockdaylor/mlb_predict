@@ -19,20 +19,26 @@ MLB data pipeline + analysis in R. Owner: Brock Daylor. Must remain **git-replic
 - Data pulls are **incremental**: skip raw files that already exist; only re-pull the in-progress season/month. Raw → parquet in `data/raw/<source>/`; combined analysis-ready parquet in `data/processed/`.
 - Header comment block on every script (name, purpose); `cat("<script>.R complete.\n")` at end.
 
-## Current state (2026-06-11)
+## Current state (2026-06-17)
 
-- Pipelines: `01_process_statcast_data.R` (Statcast, monthly parquet), `02_process_bref_data.R`, `03_process_fangraphs_data.R`, `04_process_lahman_data.R` (new; Lahman package, version-aware skip).
-- New analysis scripts (written but **never executed** — authored without an R runtime): `analysis/02_league_trends.R`, `analysis/03_hitting_metrics.R`, `analysis/04_pitching_metrics.R`, `models/02_team_wins_model.R`. All depend only on the Lahman pipeline; Statcast/FanGraphs sections skip gracefully if those files are absent.
+- **Data downloaded and in parquet format**: BRef batters/pitchers (2025–2026), FanGraphs batters/pitchers (2025–2026), Lahman (historical). Statcast NOT yet pulled.
+- **Package addition needed**: `openxlsx2` must be installed before running Excel-output scripts: `renv::install("openxlsx2"); renv::snapshot()`.
+- **Analysis scripts written (NEW, never executed)**:
+  - `analysis/05_query_pipeline.R` — flexible filter/query → Excel
+  - `analysis/06_xba_ba_gap.R` — xBA vs BA gap, 50+ AB, 2026 (uses `fg_batters_all.parquet`, column `xAVG`)
+  - `analysis/07_backwards_k.R` — called-K rate + pitch mix, 2026 (uses `statcast_strikeouts_2026.parquet`)
+  - `data_processing/05_process_statcast_strikeouts.R` — K-only Statcast pull for 2026
 - `analysis/01_analysis.R` and `models/01_modeling.R` are commented templates — leave them as-is.
-- No raw data currently downloaded (`data/raw/` nearly empty).
+- Key FanGraphs column names: `PlayerName`, `Season`, `team_name_abb`, `AVG`, `xAVG`, `wRC_plus`, `xwOBA`, `K_pct`, `BB_pct`.
+- Key BRef column names: `Name`, `season` (lowercase), `Team`, `BA`, `OBP`, `SLG`.
 
-## Immediate tasks
+## Run order for 2026 analyses
 
-1. `renv::restore()`, then `renv::install("Lahman")` and `renv::snapshot()`.
-2. Run `code/data_processing/04_process_lahman_data.R`; verify three parquet files appear in `data/processed/`.
-3. Run `analysis/02_league_trends.R`, `analysis/03_hitting_metrics.R`, `analysis/04_pitching_metrics.R`, `models/02_team_wins_model.R`. Fix any runtime errors **minimally**, preserving the conventions above; spot-check figures in `output/figures/` and tables in `output/tables/` for sanity (e.g., Pythagorean exponent ≈ 1.8–1.9; aging curve peaks ~26–28).
-4. Optionally run the Statcast/B-Ref/FanGraphs pipelines (network-heavy, rate-limited — confirm with Brock first; Statcast pulls take a long time).
-5. Report what was fixed; propose a commit message but do not commit without Brock's approval.
+1. `renv::install("openxlsx2"); renv::snapshot()` (one-time)
+2. `data_processing/05_process_statcast_strikeouts.R` (pulls ~40k rows of K events)
+3. `analysis/06_xba_ba_gap.R` (needs fg_batters_all.parquet — already present)
+4. `analysis/07_backwards_k.R` (needs statcast_strikeouts_2026.parquet from step 2)
+5. `analysis/05_query_pipeline.R` (ad-hoc queries; edit QUERY_* params at top)
 
 ## Verification checklist
 

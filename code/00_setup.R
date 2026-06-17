@@ -57,6 +57,17 @@ library(readxl)
 library(arrow)
 library(fst)
 
+# Excel export — run once if missing:
+#   renv::install("openxlsx2"); renv::snapshot()
+if (requireNamespace("openxlsx2", quietly = TRUE)) {
+  library(openxlsx2)
+} else {
+  message(
+    "openxlsx2 not installed. Excel output will be skipped.\n",
+    "Fix with: renv::install('openxlsx2'); renv::snapshot()"
+  )
+}
+
 # ---- 2. Define project paths ----
 # Using here() ensures portability across machines
 

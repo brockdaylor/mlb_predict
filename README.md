@@ -9,7 +9,8 @@ A general-purpose MLB data pipeline and analysis project. Pulls data from Statca
 ``` text
 data/
 ├── raw/
-│   ├── statcast/                  # pitch-by-pitch (one parquet per month)
+│   ├── statcast/                  # pitch-by-pitch (one parquet per month) +
+│   │                              #   statcast_strikeouts_2026.parquet (K events only)
 │   ├── baseball_reference/        # game-level batter/pitcher stats (one parquet per season)
 │   ├── fangraphs/                 # season-level advanced metrics + park factors
 │   └── lahman/                    # Lahman package tables (historical, season-level)
@@ -18,22 +19,26 @@ data/
 code/
 ├── 00_setup.R                     # global setup (paths, packages, helpers)
 ├── data_processing/
-│   ├── 01_process_statcast_data.R     # Statcast pitch-by-pitch pull
+│   ├── 01_process_statcast_data.R     # Statcast pitch-by-pitch pull (full, chunked by month)
 │   ├── 02_process_bref_data.R         # Baseball Reference traditional stats
 │   ├── 03_process_fangraphs_data.R    # FanGraphs advanced metrics + park factors
-│   └── 04_process_lahman_data.R       # Lahman historical player/team season data
+│   ├── 04_process_lahman_data.R       # Lahman historical player/team season data
+│   └── 05_process_statcast_strikeouts.R  # Strikeout-only Statcast pull (K events, 2026)
 ├── analysis/
 │   ├── 01_analysis.R              # template: descriptive stats, plots, regressions
 │   ├── 02_league_trends.R         # league-wide trends 1901–present (Lahman)
 │   ├── 03_hitting_metrics.R       # hitting relationships + aging curve (Lahman, FG optional)
-│   └── 04_pitching_metrics.R      # ERA/FIP, K-BB; Statcast velo/mix optional
+│   ├── 04_pitching_metrics.R      # ERA/FIP, K-BB; Statcast velo/mix optional
+│   ├── 05_query_pipeline.R        # flexible filter/query over all sources → Excel
+│   ├── 06_xba_ba_gap.R            # xBA vs BA gap, 50+ AB, 2026 (MLB + Twins)
+│   └── 07_backwards_k.R           # called-K rate + pitch mix, 2026 (MLB + Twins)
 └── models/
     ├── 01_modeling.R              # template: predictive modeling
     └── 02_team_wins_model.R       # team wins: OLS + Pythagorean, out-of-sample eval
 
 output/
-├── figures/            # plots and visualizations
-└── tables/             # regression tables and results
+├── figures/            # plots and visualizations (.png)
+└── tables/             # regression tables, CSVs, and Excel workbooks (.xlsx)
 
 docs/                   # notes, drafts, and writeups
 ```
@@ -58,19 +63,48 @@ renv::snapshot()
 
 Run data processing scripts in order. Each script is **incremental** — it skips seasons whose raw files already exist and only re-pulls the current in-progress season. Re-running any script safely integrates new observations without duplicating existing data.
 
-1. `code/data_processing/01_process_statcast_data.R` — Statcast pitch-by-pitch (chunked by month/week)
-2. `code/data_processing/02_process_bref_data.R` — Baseball Reference game-level batter/pitcher stats
-3. `code/data_processing/03_process_fangraphs_data.R` — FanGraphs advanced metrics + park factors
-4. `code/data_processing/04_process_lahman_data.R` — Lahman historical season data (no scraping; skips rebuild unless the installed `Lahman` package version changes)
-5. `code/analysis/02_league_trends.R` — league-wide trends (requires only step 4)
-6. `code/analysis/03_hitting_metrics.R` — hitting metrics + aging curve (requires step 4; uses FanGraphs if available)
-7. `code/analysis/04_pitching_metrics.R` — pitching metrics (requires step 4; uses Statcast if available)
-8. `code/models/02_team_wins_model.R` — team wins baselines (requires step 4)
-9. Outputs saved automatically to `output/`
+### One-time setup
 
-The Lahman-based analyses (steps 5–8) are fully replicable from a fresh clone with only `renv::restore()` — no web scraping required. The Statcast/FanGraphs sections of the analysis scripts are optional and skip gracefully when those processed files are absent.
+```r
+# Install Excel output package (not in default renv yet)
+renv::install("openxlsx2")
+renv::snapshot()
+```
+
+### 2026-focused pipeline (recommended)
+
+1. `code/data_processing/02_process_bref_data.R` — Baseball Reference game-level batter/pitcher stats
+2. `code/data_processing/03_process_fangraphs_data.R` — FanGraphs advanced metrics (xBA, wRC+, etc.)
+3. `code/data_processing/05_process_statcast_strikeouts.R` — Strikeout-only Statcast pull (~40k rows for 2026; much faster than full pitch pull)
+4. `code/analysis/05_query_pipeline.R` — Query any data source with team/age/PA filters → Excel
+5. `code/analysis/06_xba_ba_gap.R` — xBA vs BA gap analysis (50+ AB, MLB-wide + Twins) → Excel + plots
+6. `code/analysis/07_backwards_k.R` — Called-K (backwards K ꓘ) rate + pitch mix → Excel + plots
+
+### Full historical pipeline (optional)
+
+4. `code/data_processing/04_process_lahman_data.R` — Lahman historical data (no scraping)
+5. `code/data_processing/01_process_statcast_data.R` — Full Statcast pitch-by-pitch (network-heavy; months of data)
+6. `code/analysis/02_league_trends.R` — league-wide trends 1901–present
+7. `code/analysis/03_hitting_metrics.R` — hitting relationships + aging curve
+8. `code/analysis/04_pitching_metrics.R` — ERA/FIP, K-BB, Statcast velo
+9. `code/models/02_team_wins_model.R` — team wins model
+
+All outputs are saved automatically to `output/figures/` (PNG) and `output/tables/` (Excel/CSV).
 
 To add a new season, extend `SEASONS <- c(2025, 2026, ...)` in each processing script and re-run.
+
+### Customizing the query pipeline
+
+Edit the `QUERY_*` parameters at the top of `05_query_pipeline.R`:
+
+```r
+QUERY_SEASON <- 2026          # season year; NULL = all seasons
+QUERY_TEAM   <- "MIN"         # team abbreviation; NULL = all teams
+QUERY_MIN_PA <- 50            # minimum plate appearances
+QUERY_MIN_IP <- 10            # minimum innings pitched
+QUERY_MIN_AGE <- 25           # optional age range
+QUERY_MAX_AGE <- 30
+```
 
 ## Key Packages
 
