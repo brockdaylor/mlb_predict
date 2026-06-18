@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Rscript -e \"renv::restore\\(prompt = FALSE\\)\")",
+      "PowerShell($rscript = \"C:\\\\Program Files\\\\R\\\\R-4.5.2\\\\bin\\\\Rscript.exe\"; Set-Location \"C:\\\\bdaylor\\\\Research\\\\Projects\\\\mlb_predict\"; & $rscript -e \"renv::restore\\(prompt = FALSE\\)\" 2>&1 | Select-Object -Last 20)",
+      "Read(//c/Users/brock/AppData/Local/Temp/**)",
+      "Bash(\"/c/Program Files/R/R-4.5.2/bin/R.exe\" CMD INSTALL baseballr-master)",
+      "Bash(export R_LIBS_USER=\"C:/bdaylor/Research/Projects/mlb_predict/renv/library/windows/R-4.5/x86_64-w64-mingw32\")",
+      "Bash(\"/c/Program Files/R/R-4.5.2/bin/R.exe\" CMD INSTALL --no-staged-install --no-byte-compile baseballr-master)"
+    ]
+  }
+}

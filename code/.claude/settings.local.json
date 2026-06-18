@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"^here$|^fst$|^data.table$|^janitor$|^fixest$\")",
+      "Bash(grep \"^here$\")",
+      "Bash('C:/Program Files/R/R-4.5.2/bin/Rscript.exe' --vanilla -e ' *)",
+      "Bash(\"C:/Program Files/R/R-4.5.2/bin/Rscript.exe\" --vanilla -e \"cat\\('getwd:', getwd\\(\\), '\\\\n'\\); cat\\('platform:', R.version[['platform']], '\\\\n'\\); lib <- 'c:/bdaylor/Research/Projects/mlb_predict/renv/library/windows/R-4.5/x86_64-w64-mingw32'; cat\\('lib exists:', dir.exists\\(lib\\), '\\\\n'\\); .libPaths\\(c\\(lib, .libPaths\\(\\)\\)\\); cat\\('here:', requireNamespace\\('here', quietly=TRUE\\), '\\\\n'\\)\")",
+      "Bash(\"C:/Program Files/R/R-4.5.2/bin/Rscript.exe\" --vanilla -e \"cat\\('RENV_PROJECT:', Sys.getenv\\('RENV_PROJECT'\\), '\\\\n'\\); cat\\('nzchar:', nzchar\\(Sys.getenv\\('RENV_PROJECT'\\)\\), '\\\\n'\\); path <- getwd\\(\\); while \\(nchar\\(path\\) > 3\\) { if \\(file.exists\\(file.path\\(path, 'renv.lock'\\)\\)\\) break; path <- dirname\\(path\\) }; cat\\('path found:', path, '\\\\n'\\); r_ver <- paste0\\('R-', R.Version\\(\\)['major'][[1]], '.', strsplit\\(R.Version\\(\\)['minor'][[1]], '\\\\\\\\.'\\)[[1]][1]\\); cat\\('r_ver:', r_ver, '\\\\n'\\); lib <- file.path\\(path, 'renv', 'library', 'windows', r_ver, R.version[['platform']]\\); cat\\('lib:', lib, '\\\\n'\\); cat\\('exists:', dir.exists\\(lib\\), '\\\\n'\\)\")",
+      "Bash(\"C:/Program Files/R/R-4.5.2/bin/Rscript.exe\" --vanilla \"c:/bdaylor/Research/Projects/mlb_predict/code/debug_bootstrap.R\")",
+      "Bash(\"C:/Program Files/R/R-4.5.2/bin/Rscript.exe\" --vanilla -e \"source\\('00_setup.R'\\)\")",
+      "Bash(claude --version)",
+      "Bash(claude auth *)",
+      "PowerShell(claude --version 2>&1)",
+      "PowerShell(claude auth status 2>&1)"
+    ]
+  }
+}
