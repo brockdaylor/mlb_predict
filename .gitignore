@@ -34,6 +34,9 @@ renv/cache/
 # Raw data (DO NOT TRACK)
 data/raw/
 
+# Processed data: script-generated, regenerable — never tracked
+data/processed/
+
 # Optional: very large or temporary data
 data/temp/
 data/intermediate/
@@ -99,3 +102,13 @@ Desktop.ini
 tmp/
 temp/
 scratch/
+
+############################
+# Local-only (machine-specific)
+############################
+
+# Pipeline run logs and flags
+logs/
+
+# Claude local settings
+.claude/
