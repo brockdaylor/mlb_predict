@@ -6,9 +6,11 @@ MLB data pipeline + analysis in R. Owner: Brock Daylor. Must remain **git-replic
 
 ## Environment
 
-- R 4.5.2 on Windows, RStudio project (`mlb_predict.Rproj`), packages managed by `renv` (lockfile at root).
+- R 4.6.1 (x64) on Windows, RStudio project (`mlb_predict.Rproj`), packages managed by `renv` (lockfile at root). Upgraded from R 4.5.2 on 2026-10-23; see `docs/NOTES.md`.
 - Run scripts with `Rscript -e 'source(here::here("code", "<path>"))'` or in an R session from the project root.
-- After installing any new package: `renv::install()` then `renv::snapshot()`.
+- After installing any new package: `renv::install()` then `renv::snapshot()`. Set env var `RENV_CONFIG_INSTALL_STAGED=FALSE` first: the project sits in OneDrive, and OneDrive's file locks break renv's staged installs ("Access is denied").
+- baseballr is pinned at 1.6.0 (scrapers were fixed against it; 2.0.0 is a major release). Don't upgrade without testing the scrapers.
+- Known issue: on this machine (x64 R emulated on ARM), R crashes at exit (code -1073741569) after loading `arrow`, after the script has finished. Judge success by the script's final `complete.` line, not the exit code; `run_pipeline.bat` does this.
 - `data/raw/` and `data/processed/` are **not** tracked by git and are never hand-edited.
 
 ## Conventions (follow strictly)
@@ -22,7 +24,6 @@ MLB data pipeline + analysis in R. Owner: Brock Daylor. Must remain **git-replic
 ## Current state (2026-06-17)
 
 - **Data downloaded and in parquet format**: BRef batters/pitchers (2025–2026), FanGraphs batters/pitchers (2025–2026), Lahman (historical). Statcast NOT yet pulled.
-- **Package addition needed**: `openxlsx2` must be installed before running Excel-output scripts: `renv::install("openxlsx2"); renv::snapshot()`.
 - **Analysis scripts written (NEW, never executed)**:
   - `analysis/05_query_pipeline.R` — flexible filter/query → Excel
   - `analysis/06_xba_ba_gap.R` — xBA vs BA gap, 50+ AB, 2026 (uses `fg_batters_all.parquet`, column `xAVG`)
@@ -34,7 +35,7 @@ MLB data pipeline + analysis in R. Owner: Brock Daylor. Must remain **git-replic
 
 ## Run order for 2026 analyses
 
-1. `renv::install("openxlsx2"); renv::snapshot()` (one-time)
+1. `renv::restore()` if `renv::status()` reports packages out of sync (one-time per machine)
 2. `data_processing/05_process_statcast_strikeouts.R` (pulls ~40k rows of K events)
 3. `analysis/06_xba_ba_gap.R` (needs fg_batters_all.parquet — already present)
 4. `analysis/07_backwards_k.R` (needs statcast_strikeouts_2026.parquet from step 2)
