@@ -7,9 +7,9 @@ setlocal EnableDelayedExpansion
 :: outputs and commit by hand.
 ::
 :: Success check: a step passes only if its log contains the script's final
-:: "<script>.R complete." line. Exit codes are not trusted, because on this
-:: machine (x64 R under ARM emulation) loading arrow makes R crash during
-:: shutdown (0xC00000FF) after the script has already finished its work.
+:: "<script>.R complete." line. Exit codes are not trusted: on ARM64 Windows
+:: (x64 R under emulation) R crashes during shutdown (0xC00000FF) after the
+:: script has finished, unless the env var CLI_NO_THREAD=1 is set. See docs\NOTES.md.
 cd /d "%~dp0"
 
 set LOGDIR=%~dp0logs

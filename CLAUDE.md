@@ -10,7 +10,7 @@ MLB data pipeline + analysis in R. Owner: Brock Daylor. Must remain **git-replic
 - Run scripts with `Rscript -e 'source(here::here("code", "<path>"))'` or in an R session from the project root.
 - After installing any new package: `renv::install()` then `renv::snapshot()`. Set env var `RENV_CONFIG_INSTALL_STAGED=FALSE` first: the project sits in OneDrive, and OneDrive's file locks break renv's staged installs ("Access is denied").
 - baseballr is pinned at 1.6.0 (scrapers were fixed against it; 2.0.0 is a major release). Don't upgrade without testing the scrapers.
-- Known issue: on this machine (x64 R emulated on ARM), R crashes at exit (code -1073741569) after loading `arrow`, after the script has finished. Judge success by the script's final `complete.` line, not the exit code; `run_pipeline.bat` does this.
+- On this machine (x64 R emulated on ARM), the user env var `CLI_NO_THREAD=1` must be set. Otherwise R crashes at exit (code -1073741569) once `cli` is loaded, which happens via rlang, arrow, the tidyverse and others; see `docs/NOTES.md`. `run_pipeline.bat` judges success by each script's final `complete.` line either way.
 - `data/raw/` and `data/processed/` are **not** tracked by git and are never hand-edited.
 
 ## Conventions (follow strictly)
